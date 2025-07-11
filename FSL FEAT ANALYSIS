@@ -1,0 +1,88 @@
+# 1) create a text file with all participant names -> see subj_list.txt
+
+# 2) run ICA AROMA
+
+for subj in `cat subj_list.txt`; do
+for run in 1 2; do
+rm ${slurm_output}/slurm.job
+
+echo '#!/bin/bash' >> ${slurm_output}/slurm.job
+echo "#SBATCH --job-name=MyJob" >> ${slurm_output}/slurm.job
+echo "#SBATCH --account=wr47" >> ${slurm_output}/slurm.job
+echo "#SBATCH --time=01:00:00" >> ${slurm_output}/slurm.job
+echo "#SBATCH --ntasks=1" >> ${slurm_output}/slurm.job
+echo "#SBATCH --mem-per-cpu=8000" >> ${slurm_output}/slurm.job
+echo "#SBATCH --cpus-per-task=1" >> ${slurm_output}/slurm.job
+echo "python ICA_AROMA.py -feat ${subj}_run${run}.feat -out ${subj}_run${run}" >> ${slurm_output}/slurm.job
+cd ${slurm_output}
+sbatch ${slurm_output}/slurm.job
+
+done
+done
+
+# 3) FEAT level 1
+  # create design files
+
+module load fsl/6.0.3
+for subj in `cat subj_list.txt`; do
+for run in 1 2; do
+echo ${subj}_BL_run${run}
+cp lvl1design_ICA.fsf design_${subj}_run${run}.fsf
+sed -i "s/MASTER/${subj}/g" design_${subj}_run${run}.fsf
+sed -i "s/RUN/${run}/g" design_${subj}_run${run}.fsf
+done
+done
+
+ # run FEAT
+
+for subj in `cat subj_list.txt`; do
+for run in 1 2; do
+
+rm slurm.job
+
+echo '#!/bin/bash' >> ${slurm_output}/slurm.job
+echo "#SBATCH --job-name=MyJob" >> ${slurm_output}/slurm.job
+echo "#SBATCH --account=wr47" >> ${slurm_output}/slurm.job
+echo "#SBATCH --time=01:00:00" >> ${slurm_output}/slurm.job
+echo "#SBATCH --ntasks=1" >> ${slurm_output}/slurm.job
+echo "#SBATCH --mem-per-cpu=4096" >> ${slurm_output}/slurm.job
+echo "#SBATCH --cpus-per-task=1" >> ${slurm_output}/slurm.job
+echo "feat design_${subj}_run${run}.fsf" >> ${slurm_output}/slurm.job
+
+cd ${slurm_output}
+sbatch ${slurm_output}/slurm.job
+
+done
+done
+
+# 4) FEAT level 2
+
+  # create design files
+module load fsl/6.0.3
+for subj in `cat subj_list.txt`; do
+echo ${subj}
+cp lvl2design.fsf lvl2design_${subj}.fsf
+sed -i "s/MASTER/${subj}/g" lvl2design_${subj}.fsf
+done
+done
+
+  # run FEAT
+
+for subj in `cat subj_list.txt`; do
+
+rm slurm.job
+
+echo '#!/bin/bash' >> ${slurm_output}/slurm.job
+echo "#SBATCH --job-name=MyJob" >> ${slurm_output}/slurm.job
+echo "#SBATCH --account=wr47" >> ${slurm_output}/slurm.job
+echo "#SBATCH --time=01:00:00" >> ${slurm_output}/slurm.job
+echo "#SBATCH --ntasks=1" >> ${slurm_output}/slurm.job
+echo "#SBATCH --mem-per-cpu=4096" >> ${slurm_output}/slurm.job
+echo "#SBATCH --cpus-per-task=1" >> ${slurm_output}/slurm.job
+echo "feat lvl2design_${subj}.fsf" >> ${slurm_output}/slurm.job
+
+cd ${slurm_output}
+sbatch ${slurm_output}/slurm.job
+
+done
+done
