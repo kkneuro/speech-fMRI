@@ -1,0 +1,18 @@
+# load data
+MS_Data <- read_excel("speechdata.xlsx")
+View(MS_Data)
+
+# run kruskal-wallis test comparing by MS subgroup
+kruskal.test(speechtask ~ dystremgroup, data = MS_Data)
+
+# run dunn's test of multiple comparisons to determine which variables differed significantly (holm method for p value adjustments)
+library(rstatix)
+MS_Data %>% dunn_test(speechtask ~ dystremgroup, p.adjust.method = "holm")
+
+# find mean, median, stdev for each speech measure within each group
+MS_Data %>% summarise(count = n(), median = median(speechtask, na.rm = TRUE), mean = mean(speechtask, na.rm = TRUE), sd = sd(speechtask, na.rm = TRUE))
+
+# for interquartile range, use the following
+  # to save time, i created separate dataframes for each subgroup
+  # used type 8 quantile as this is the recommended type (Hyndman & Fan, 1996)
+quantile(subgroup_data$speechtask, prob = c(.25,.75), type = 8, na.rm = TRUE, digits = 4)
